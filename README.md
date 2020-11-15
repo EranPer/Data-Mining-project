@@ -11,7 +11,9 @@ We used requests, beautifulsoup and lxml platforms for creating functions of dat
 
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
+```bash
 pip install -r requirements.txt
+```
 
 ## How to use the code
 After installation, upload the python file to your favorite Python editor and run the code. Alternatively, run the code from the CLI (i.e. CMD in windows). The program fetches the data at first and update it in any given time.
