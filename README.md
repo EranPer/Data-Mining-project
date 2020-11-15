@@ -3,8 +3,8 @@
 This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetchs the data when running it first, and updates it every x time.
 
 ## Team Members
-Eran Perelman<br/>
-Nofar Herman<br/>
+[Eran Perelman](https://github.com/EranPer/ "Eran Perelman's GitHub")<br/>
+[Nofar Herman](https://github.com/nofr "Nofar Herman's GitHub")<br/>
 
 ## Process explanation
 We used requests, beautifulsoup and lxml platforms for creating functions of data parsing. The data is stored in lists, sets and dictionaries. There is also a function for saving the data on a file. The parsing code runs in a loop that updates the data every x time. The user can change the update times by changing it in the constant list in the beginning of the code.
