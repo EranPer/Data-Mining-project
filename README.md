@@ -19,4 +19,4 @@ After installation, upload the python file to your favorite Python editor and ru
 ## DISCLAIMER
 We use this information of the Coronavirus cases from the worldometers website for learning purposes only!
 <br />All rights reserved ©
-<br /[Bonus](https://www.shorturl.at/bqACD "The motivation")
+<br />[Bonus](https://www.shorturl.at/bqACD "The motivation")
