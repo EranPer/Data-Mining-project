@@ -1,5 +1,5 @@
 # Data Mining project
-## step 1
+## Step 1
 This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetchs the data when running it first, and updates it every x time.
 
 ## Process explanation
