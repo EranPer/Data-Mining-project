@@ -2,91 +2,72 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time
-
-URL = "https://www.worldometers.info/coronavirus/"
-
-COLUMNS_HTML_HEAD = 'var columns'
-COLUMNS_HTML_TAIL = ';'
-COUNTRY_HTML_STARTING_CODE = "<a class=\"mt_a\" href=\"country"
-COUNTRY_HTML_ENDING_CODE = "<td style=\"display:none\" data-continent"
-COUNTRY_BLOCK_SIZE = 1024
-COUNTRY_HTML_ENDING_INDEX = 393000
-
-WORLDWIDE_CASES_HTML = "Coronavirus Cases:</h1>\n<div class=\"maincounter-number\">""\n<span style=\"color:#aaa\">"
-
-UPDATE_TIME = ['08:00:00', '16:00:00', '00:00:00']
+from config import *
 
 
 def html(url):
     """
     Function html
-
     Receives a url address and returns its html code.
     :param url: the url to parse.
     :return: html page code.
     """
     page = requests.get(url)
-    # print(page.text)
     txt = page.text
     return txt
 
 
-def parsing_columns_data(starting_line, ending_line, text):
+def parsing_columns_data(starting_line, ending_line, text, number_of_columns=14):
     """
     Function parsing_columns_data
-
     Searching in a html code for columns data (table headers).
-
     :param starting_line: starting string of the columns html block.
     :param ending_line: ending string of the columns html block.
     :param text: string of full or partial html code to search in
     :return: a list of the columns values.
     """
     columns = ['Country']
-    index1 = text.find(starting_line)
-    index2 = text[index1:].find(ending_line)
-    code = text[index1:index1 + index2]
-    for i in range(13):
-        index1 = code.find('\'')
-        index2 = code[index1 + 1:].find('\'')
-        value = code[index1 + 1:index1 + index2 + 1]
-        code = code[index1 + index2 + 2:]
+    starting_index_of_columns = text.find(starting_line)
+    ending_index_of_columns = text[starting_index_of_columns:].find(ending_line)
+    code = text[starting_index_of_columns:starting_index_of_columns + ending_index_of_columns]
+    for i in range(number_of_columns - 1):
+        starting_index_of_columns = code.find('\'')
+        ending_index_of_columns = code[starting_index_of_columns + 1:].find('\'')
+        value = code[starting_index_of_columns + 1:starting_index_of_columns + ending_index_of_columns + 1]
+        code = code[starting_index_of_columns + ending_index_of_columns + 2:]
         columns.append(value)
     return columns
 
 
-def parsing_country_data(starting_line, ending_line, text, countries_set, country_link_dict):
+def parsing_country_values(row_list, list_block):
     """
-    Function parsing_country_data
-
-    Searching in the html code for country's relevant data regarding the Coronavirus cases
-    and returning its values in a list.
-
-    :param starting_line: starting string of the country html block.
-    :param ending_line: ending string of the country html block.
-    :param text: string of full or partial html code to search in.
-    :return: a list of the country's values.
+    This function helps to retrieve the values from countries line by line in a block of code.
+    :param row_list: the list to append the values for each country.
+    :param list_block: the html code block.
+    :return: row_list: the list with the values of countries.
     """
-    row_list = []
-    starting_index = text.find(starting_line)
-    ending_index = starting_index + len(starting_line) + text[starting_index + len(starting_line) + 1:].find('/')
-    country_link = text[starting_index + len(starting_line) + 1:ending_index + 1]
-    text_block = text[starting_index:]
-    ending_index = text_block.find(ending_line)
-    text_block = text_block[:ending_index]
-    list_block = text_block.split('\n')
     for line in list_block[:-1]:
-        index1 = line.find('>')
-        index2 = line[index1:].find('<')
-        if index1 == -1 or index2 == -1:
+        value_starting_index = line.find('>')
+        value_ending_index = line[value_starting_index:].find('<')
+        if value_starting_index == -1 or value_ending_index == -1:
             continue
-        value = line[index1 + 1:index1 + index2]
+        value = line[value_starting_index + 1:value_starting_index + value_ending_index]
         if value == '':
-            index1 = line.find('>') + 1
-            index1 = line.find('>', index1)
-            index2 = line[index1:].find('<')
-            value = line[index1 + 1:index1 + index2]
+            value_starting_index = line.find('>') + 1
+            value_starting_index = line.find('>', value_starting_index)
+            value_ending_index = line[value_starting_index:].find('<')
+            value = line[value_starting_index + 1:value_starting_index + value_ending_index]
         row_list.append(value)
+    return row_list
+
+
+def cleaning_countries_values(row_list):
+    """
+    This function helps to clean the data for each country - replace 'N/A' or blank values with 'None'
+    and to convert the numerical value to float.
+    :param row_list: the list with values to check and clean.
+    :return: row_list: the list with the float or None values only.
+    """
     for i, number in enumerate(row_list[1:]):
         if number.strip() == '' or number == 'N/A':
             row_list[i + 1] = None
@@ -94,22 +75,48 @@ def parsing_country_data(starting_line, ending_line, text, countries_set, countr
             row_list[i + 1] = int(number.replace(',', ''))
         else:
             row_list[i + 1] = float(number)
+    return row_list
+
+
+def parsing_country_data(starting_line, ending_line, text, countries_set, country_link_dict):
+    """
+    Function parsing_country_data
+    Searching in the html code for country's relevant data regarding the Coronavirus cases
+    and returning its values in a list.
+    :param starting_line: starting string of the country html block.
+    :param ending_line: ending string of the country html block.
+    :param text: string of full or partial html code to search in.
+    :return: a list of the country's values.
+    """
+    row_list = []
+
+    starting_index = text.find(starting_line)
+    ending_index = starting_index + len(starting_line) + text[starting_index + len(starting_line) + 1:].find('/')
+    country_link = text[starting_index + len(starting_line) + 1:ending_index + 1]
+    text_block = text[starting_index:]
+    ending_index = text_block.find(ending_line)
+    text_block = text_block[:ending_index]
+    list_block = text_block.split('\n')
+
+    row_list = parsing_country_values(row_list, list_block)
+    row_list = cleaning_countries_values(row_list)
+
     country = row_list[0]
+
     if country in countries_set:
         return []
     else:
         countries_set.add(country)
         country_link_dict[country] = country_link
+
     return row_list
 
 
 def refresh_data(update_time_list):
     """
         Function refresh_data
-
         This function receives a list of different time strings in the format of %H:%M:%S and returens True/False if
         the current time matches one of the items (time string) in the list.
-
         :param update_time_list: receives a list of different time strings (%H:%M:%S)
         :return: True or false if the current time is in the list
         """
@@ -122,13 +129,11 @@ def refresh_data(update_time_list):
 
 def parsing_main_data(txt):
     """
-
     the main_data function attract the main titles data from the url page,
     and returns it in a dictionary. the three main title -
     'Coronavirus Cases', 'Deaths' and 'Recovered'-
     are presented as a dictionary keys
     and the numerical values are presented as the the key values respectively.
-
     :param txt: the readable textual given data from URL
     :return: the data as a dictionary
     """
@@ -150,12 +155,10 @@ def parsing_main_data(txt):
 def parsing_country_history(txt):
     """
     Function parsing_country_history.
-
     This function receives an html string of a specific country and returns its coronavirus daily history
     to the current day. The history contains 5 cases: Total Cases, Daily New Cases, Active Cases, Total Deaths and
     Daily Deaths. If the country does not have a case or cases of some kind, for example, Total Deaths = 0,
     It will return a blank list of lists for that case.
-
     :param txt: the html code (string) of the country's webpage.
     :return: a dictionary of 5 key cases containing 2 lists for each case: the list for days
     (usually starting from Feb 15) and a list of cases per day.
@@ -174,12 +177,10 @@ def parsing_country_history(txt):
 
         starting_index = starting_index + txt[starting_index:].find('categories: [')
         ending_index = starting_index + txt[starting_index:].find(']')
-
         categories_list = txt[starting_index + len('categories: [') + 1:ending_index - 1].split('\",\"')
 
         starting_index = starting_index + txt[starting_index:].find('data: [')
         ending_index = starting_index + txt[starting_index:].find(']')
-
         data_list = txt[starting_index + len('data: ['):ending_index].split(',')
 
         country_history[graph] = [categories_list, data_list]
@@ -187,12 +188,30 @@ def parsing_country_history(txt):
     return country_history
 
 
+def countries_to_list(country_list, txt, country_set, country_link_dict):
+    """
+    This function helps to fetch the countries data in a text and add into a list of countries.
+    :param country_list: the country list to append the new country values.
+    :param txt: the HTML code.
+    :param country_set: the set of countries, will be updated if need in case of new countries.
+    :param country_link_dict: the dictionary of each country with the link to its webpage.
+    :return: the updated list.
+    """
+    starting_index = txt.find(COUNTRY_HTML_STARTING_CODE)
+    ending_index = COUNTRY_HTML_ENDING_INDEX
+    for i in range(starting_index, ending_index, COUNTRY_BLOCK_SIZE):
+        country_list.append(
+            parsing_country_data(COUNTRY_HTML_STARTING_CODE, COUNTRY_HTML_ENDING_CODE,
+                                 txt[i:], country_set, country_link_dict))
+
+    country_list = [x for x in country_list if x != []]
+    return country_list
+
+
 def parsing_data():
     """
     Function parsing_data
-
     Parsing data of Corona virus cases from the given website.
-
     :return: True or False if data fetching succeeded or not.
     """
     txt = html(URL)
@@ -205,26 +224,16 @@ def parsing_data():
     print("Starting fetching data at:", current_time)
 
     try:
-        print(parsing_main_data(txt))
+        parsing_main_data(txt)
 
         columns_list = parsing_columns_data(COLUMNS_HTML_HEAD, COLUMNS_HTML_TAIL, txt)
         country_list.append(columns_list)
-
-        starting_index = txt.find(COUNTRY_HTML_STARTING_CODE)
-        ending_index = COUNTRY_HTML_ENDING_INDEX
-        for i in range(starting_index, ending_index, COUNTRY_BLOCK_SIZE):
-            country_list.append(
-                parsing_country_data(COUNTRY_HTML_STARTING_CODE, COUNTRY_HTML_ENDING_CODE, txt[i:], country_set, country_link_dict))
-
-        country_list = [x for x in country_list if x != []]
+        country_list = countries_to_list(country_list, txt, country_set, country_link_dict)
 
         for country in country_list:
             print(country)
-
-        print()
-        print('countries:', country_set)
-        print('number of countries:', len(country_set))
-        print()
+        print('\ncountries:', country_set)
+        print('number of countries:', len(country_set), '\n')
 
         for country in country_set:
             txt = html(URL + 'country/' + country_link_dict[country] + '/')
@@ -236,64 +245,30 @@ def parsing_data():
         print("Done fetching data at:", current_time)
 
         print('Next update/s will occur at:', UPDATE_TIME)
-    except:
-        print('Failed to fetch data. Check HTML code')
+    except Exception as ex:
+        print(ex, ERR_MSG_FETCH)
         return False
 
-    return True
-
-
-def saving_data_to_file(filename, starting_time, ending_time, global_info, country_list, country_set, country_history):
-    """
-    Function saving_data_to_file
-
-    This function saves the data from the Coronavirus web site to a file.
-
-    :param filename: the name and path to a (txt) file
-    :param starting_time: the starting time of the parsing process
-    :param ending_time: the ending time of the parsing process
-    :param global_info: a dictionary containing global data with keys: 'Coronavirus Cases', 'Deaths' and 'Recovered'
-    :param country_list: a list of list (table) of every country with its individual data regarding its cases
-    :param country_set: a set of the countries (216)
-    :param country_history: a dictionary with country key containing a dictionary with 5 keys of cases for each country.
-    Each case containing a list of 2 lists:
-    1st list contains the dates (of days) and 2nd list contains the values for each day.
-    :return: True or False if creating file and writing to it was successful.
-    """
-    try:
-        f = open(filename, "w")
-    except:
-        print('Failed to open a file!')
-        return False
-    try:
-        f.write("Starting fetching data at:" + starting_time + "\n")
-        f.write(str(global_info) + "\n")
-        for country in country_list:
-            f.write(str(country) + "\n")
-        f.write('countries:' + str(country_set) + "\n")
-        f.write('number of countries:' + str(len(country_set)) + "\n")
-        for country in country_set:
-            f.write(str(country) + "\n")
-            f.write(str(country_history[country]) + "\n")
-        f.write("Done fetching data at:" + ending_time + "\n")
-        f.write('Next update/s will occur at:' + str(UPDATE_TIME) + "\n")
-    except:
-        print('Failed to write to a file!')
-        return False
-    finally:
-        f.close()
     return True
 
 
 def main():
+    """
+    The main function. Fetches data at start and every UPDATE_TIME.
+    :return:
+    """
     data_fetched = False
     while True:
+        # Check for update time if it's time to refresh data or if the code is running for the first time
         if refresh_data(UPDATE_TIME) or not data_fetched:
             parsing_data()
+            # sleep for 5 seconds after scraping data
             time.sleep(5)
             data_fetched = True
+        # interval of 1 second
         time.sleep(1)
 
 
 if __name__ == '__main__':
     main()
+
