@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time
+import sys
 from config import *
 
 
@@ -78,7 +79,7 @@ def cleaning_countries_values(row_list):
     return row_list
 
 
-def parsing_country_data(starting_line, ending_line, text, countries_set, country_link_dict):
+def parsing_country_data(starting_line, ending_line, text, countries_fetch_list, countries_set, country_link_dict):
     """
     Function parsing_country_data
     Searching in the html code for country's relevant data regarding the Coronavirus cases
@@ -102,6 +103,9 @@ def parsing_country_data(starting_line, ending_line, text, countries_set, countr
     row_list = cleaning_countries_values(row_list)
 
     country = row_list[0]
+    if len(countries_fetch_list) > 0:
+        if country not in countries_fetch_list:
+            return []
 
     if country in countries_set:
         return []
@@ -188,9 +192,10 @@ def parsing_country_history(txt):
     return country_history
 
 
-def countries_to_list(country_list, txt, country_set, country_link_dict):
+def countries_to_list(countries_fetch_list, country_list, txt, country_set, country_link_dict):
     """
     This function helps to fetch the countries data in a text and add into a list of countries.
+    :param countries_fetch_list: the list of country to fetch from.
     :param country_list: the country list to append the new country values.
     :param txt: the HTML code.
     :param country_set: the set of countries, will be updated if need in case of new countries.
@@ -200,15 +205,16 @@ def countries_to_list(country_list, txt, country_set, country_link_dict):
     starting_index = txt.find(COUNTRY_HTML_STARTING_CODE)
     ending_index = COUNTRY_HTML_ENDING_INDEX
     for i in range(starting_index, ending_index, COUNTRY_BLOCK_SIZE):
-        country_list.append(
-            parsing_country_data(COUNTRY_HTML_STARTING_CODE, COUNTRY_HTML_ENDING_CODE,
-                                 txt[i:], country_set, country_link_dict))
+        country_list.append(parsing_country_data(COUNTRY_HTML_STARTING_CODE,
+                                                 COUNTRY_HTML_ENDING_CODE, txt[i:],
+                                                 countries_fetch_list,
+                                                 country_set, country_link_dict))
 
     country_list = [x for x in country_list if x != []]
     return country_list
 
 
-def parsing_data():
+def parsing_data(countries_fetch_list):
     """
     Function parsing_data
     Parsing data of Corona virus cases from the given website.
@@ -220,15 +226,13 @@ def parsing_data():
     country_link_dict = {}
     country_history = {}
 
-    current_time = datetime.now().strftime("%H:%M:%S")
-    print("Starting fetching data at:", current_time)
-
     try:
-        parsing_main_data(txt)
+        print(parsing_main_data(txt))
+        print()
 
         columns_list = parsing_columns_data(COLUMNS_HTML_HEAD, COLUMNS_HTML_TAIL, txt)
         country_list.append(columns_list)
-        country_list = countries_to_list(country_list, txt, country_set, country_link_dict)
+        country_list = countries_to_list(countries_fetch_list, country_list, txt, country_set, country_link_dict)
 
         for country in country_list:
             print(country)
@@ -241,30 +245,75 @@ def parsing_data():
             print(country)
             print(country_history[country])
 
-        current_time = datetime.now().strftime("%H:%M:%S")
-        print("Done fetching data at:", current_time)
-
-        print('Next update/s will occur at:', UPDATE_TIME)
     except Exception as ex:
         print(ex, ERR_MSG_FETCH)
-        return False
-
+        sys.exit(1)
     return True
+
+
+def get_update_times_list(filename):
+    """
+    This function receives a file containing update times and returns a list of those times.
+    :param filename: a file containing update times in the format 00:00:00 in every line.
+    :return: a list of the update times.
+    """
+    update_times_list = []
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.replace('\n', '')
+            update_times_list.append(line)
+    return update_times_list
+
+
+def get_countries_list(filename):
+    """
+    This function receives a file containing countries and returns a list of those countries.
+    :param filename: a file containing names of countries in every line.
+    :return: a list of the countries.
+    """
+    countries_list = []
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.replace('\n', '')
+            countries_list.append(line)
+    return countries_list
 
 
 def main():
     """
-    The main function. Fetches data at start and every UPDATE_TIME.
+    The main function. Get user input: Update times and a file containing countries.
+    Fetches data at start and every time on the 'update_times' list.
     :return:
     """
+    if len(sys.argv) != REQUIRED_NUM_OF_ARGS:
+        print("usage: ./coronavirus_2.0.py times.txt countries.txt")
+        print("Taking default instead")
+        update_times_list = UPDATE_TIME
+        countries_fetch_list = COUNTRIES_FETCH
+        if not countries_fetch_list:
+            stat = 'all'
+        else:
+            stat = countries_fetch_list
+        print('times=' + str(update_times_list) + ' countries=' + str(stat) + '\n')
+    else:
+        update_times_list = get_update_times_list(sys.argv[ARG_UPDATES_FILE])
+        countries_fetch_list = get_countries_list(sys.argv[ARG_COUNTRIES_FILE])
+        print('times=' + str(update_times_list) + ' countries=' + str(countries_fetch_list) + '\n')
+
     data_fetched = False
     while True:
         # Check for update time if it's time to refresh data or if the code is running for the first time
-        if refresh_data(UPDATE_TIME) or not data_fetched:
-            parsing_data()
-            # sleep for 5 seconds after scraping data
-            time.sleep(5)
+        if refresh_data(update_times_list) or not data_fetched:
+            current_time = datetime.now().strftime("%H:%M:%S")
+            print("Starting fetching data at:", current_time)
+
+            parsing_data(countries_fetch_list)
             data_fetched = True
+
+            current_time = datetime.now().strftime("%H:%M:%S")
+            print("Done fetching data at:", current_time)
+            print('Next update/s will occur at:', update_times_list)
+
         # interval of 1 second
         time.sleep(1)
 

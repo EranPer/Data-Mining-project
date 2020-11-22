@@ -1,6 +1,13 @@
 # Data Mining project
-## Step 1
+## Checkpoint 1
 This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetchs the data when running it first, and updates it every x time.
+
+## Checkpoint 2
+Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line.
+
+```bash
+Usage: coronavirus_2.0.py update_times.txt countries.txt
+```
 
 ## Team Members
 [Eran Perelman](https://github.com/EranPer/ "Eran Perelman's GitHub")<br/>
