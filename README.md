@@ -1,15 +1,11 @@
 ![Build Status](https://www.itc.tech/wp-content/uploads/2018/03/site-logo.png)
 
-# Data Mining project
+# Data Mining project - Coronavirus Web Scraper
 ## Checkpoint 1
 This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetchs the data when running it first, and updates it every x time.
 
 ## Checkpoint 2
-Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line.
-
-```bash
-Usage: coronavirus_2.0.py update_times.txt countries.txt
-```
+- Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line.
 
 ## Team Members
 [Eran Perelman](https://github.com/EranPer/ "Eran Perelman's GitHub")<br/>
@@ -25,7 +21,12 @@ pip install -r requirements.txt
 ```
 
 ## How to use the code
-After installation, upload the python file to your favorite Python editor and run the code. Alternatively, run the code from the CLI (i.e. CMD in windows). The program fetches the data at first and update it in any given time.
+The program fetches the data at first and update it in any given time.
+After installation, upload the python file to your favorite Python editor and run the code. 
+Alternatively, run the code from the CLI (i.e. CMD in windows). The usage is the following:
+```bash
+Usage: coronavirus_2.0.py update_times.txt countries.txt
+```
 
 ## DISCLAIMER
 We use this information of the Coronavirus cases from the worldometers website for learning purposes only!
