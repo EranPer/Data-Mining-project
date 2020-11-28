@@ -214,6 +214,102 @@ def countries_to_list(countries_fetch_list, country_list, txt, country_set, coun
     return country_list
 
 
+def cell_numeric_value(cell):
+    """
+     good for both below functions
+     NEED TO FINISH THE DOCUMENTATION
+    :param cell:
+    :return:
+    """
+    cell_final = cell.text.strip()
+    if '+' in cell:
+        cell_final = int(cell_final[1:].replace(',', ''))
+    elif cell_final == '' or cell_final == 'N/A' or cell_final == None:
+        cell_final = -1    ## instead of None (for database insertion sake)
+    else:
+        # print(cell_final, type(cell_final))
+        cell_final = round(float(cell_final.replace(',', '')))
+    return cell_final
+
+
+def parsing_state_page(txt_page):
+    """
+    still not documented - that function thkes the usa url and parses the states data
+    :param txt_page:
+    :return:
+    """
+    soup = BeautifulSoup(txt_page, features="lxml")
+    table = soup.select('#usa_table_countries_today')[0]
+
+    table_list = []
+
+    for table_row in table.findAll('tr'):  # tr = table row in html
+        cells = table_row.findAll('td')  # td = table column in html
+        if len(cells) > 0:
+            country_name = cells[1].text.strip()
+            # I want to ignore the 'total' row
+            if 'Total' in country_name or 'World' in country_name:
+                continue
+
+            table_dictionaries = {
+                'state': country_name,
+                'total cases': cell_numeric_value(cells[2]),
+                'new cases': cell_numeric_value(cells[3]),
+                'total death': cell_numeric_value(cells[4]),
+                'new deaths': cell_numeric_value(cells[5]),
+                'total recovered': cell_numeric_value(cells[6]),
+                'active cases': cell_numeric_value(cells[7]),
+                'cases per 1 million': cell_numeric_value(cells[8]),
+                'deaths per 1 million': cell_numeric_value(cells[9]),
+                'total tests': cell_numeric_value(cells[10]),
+                'test  per1 million': cell_numeric_value(cells[11]),
+                'population': cell_numeric_value(cells[12])
+            }
+            table_list.append(table_dictionaries)
+
+    return table_list
+
+
+def parsing_country_page(txt_page):
+    """
+     !!! ERAN !!!
+     this function is good and running!
+    :param txt_page:
+    :return:
+    """
+    soup = BeautifulSoup(txt_page, features="lxml")
+    table = soup.select('#main_table_countries_today')[0]
+
+    table_list = []
+
+    for table_row in table.findAll('tr'):  # tr = table row in html
+        cells = table_row.findAll('td')  # td = table column in html
+
+        if len(cells) > 0:
+            country_name = cells[1].text.strip()
+            if 'Total' in country_name or 'World' in country_name:
+                continue
+
+            table_dictionaries = {
+                'country': country_name,
+                'total cases': cell_numeric_value(cells[2]),
+                'new cases': cell_numeric_value(cells[3]),
+                'total death': cell_numeric_value(cells[4]),
+                'new deaths': cell_numeric_value(cells[5]),
+                'total recovered': cell_numeric_value(cells[6]),
+                'active cases': cell_numeric_value(cells[8]),
+                'critical cases': cell_numeric_value(cells[9]),
+                'cases per 1 million': cell_numeric_value(cells[10]),
+                'deaths per 1 million': cell_numeric_value(cells[11]),
+                'total tests': cell_numeric_value(cells[12]),
+                'test per1 million': cell_numeric_value(cells[13]),
+                'population': cell_numeric_value(cells[14])
+            }
+            table_list.append(table_dictionaries)
+
+    return table_list
+
+
 def parsing_data(countries_fetch_list):
     """
     Function parsing_data
@@ -244,6 +340,11 @@ def parsing_data(countries_fetch_list):
             country_history[country] = parsing_country_history(txt)
             print(country)
             print(country_history[country])
+
+        usa_states = parsing_state_page(html(USA_URL))
+        for state in usa_states:
+            print(state)
+        print(f'number of USA states and sub-regions: {len(usa_states)}')
 
     except Exception as ex:
         print(ex, ERR_MSG_FETCH)

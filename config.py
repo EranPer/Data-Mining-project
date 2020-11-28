@@ -2,8 +2,13 @@
 Configuration file for the Coronavirus website scraper's main code
 """
 
-# The URL to fetch data from
+# The main URL to fetch data from
 URL = "https://www.worldometers.info/coronavirus/"
+
+
+## The URL to fech USA states data from
+USA_URL = "https://www.worldometers.info/coronavirus/country/us/"
+
 
 # Columns names block is between COLUMNS_HTML_HEAD string and COLUMNS_HTML_TAIL string
 COLUMNS_HTML_HEAD = 'var columns'
