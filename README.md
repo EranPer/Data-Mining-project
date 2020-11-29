@@ -28,6 +28,7 @@ Alternatively, run the code from the CLI (i.e. CMD in windows). The usage is the
 ```bash
 Usage: coronavirus_2.0.py update_times.txt countries.txt
 ```
+The default values, when running the code without arguments, will result in fetching all of the countries.
 
 ## DISCLAIMER
 We use this information of the Coronavirus cases from the worldometers website for learning purposes only!
