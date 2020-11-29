@@ -15,6 +15,8 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 ### Checkpoint 2
 - Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line. The code will fetch only relevant country's history, mentioned in the ```countries``` file, and will update it any given time, mentioned in the ```update_times``` file.
 
+- Added a Mysql database to the program. Now you can create a DB, insert and update the data that being fetched by the webscraper main code.
+
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
 ```bash
@@ -29,6 +31,9 @@ Alternatively, run the code from the CLI (i.e. CMD in windows). The usage is the
 Usage: coronavirus_2.1.py update_times.txt countries.txt
 ```
 The default values, when running the code without arguments, will result in fetching all of the countries.
+
+## DB documentation
+![alt text](ERD.png "Coronavirus database")
 
 ## DISCLAIMER
 We use this information of the Coronavirus cases from the worldometers website for learning purposes only!
