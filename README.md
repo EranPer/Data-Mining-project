@@ -35,6 +35,11 @@ The default values, when running the code without arguments, will result in fetc
 ## DB documentation
 ![alt text](ERD.png "Coronavirus database")
 
+The database includes 2 tables: states and countries. Each row in the tables with a unique id.
+
+- states tables includes 
+
+
 ## DISCLAIMER
 We use this information of the Coronavirus cases from the worldometers website for learning purposes only!
 <br />All rights reserved ©
