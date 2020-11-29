@@ -1,6 +1,7 @@
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 import time
 import sys
 from config import *
@@ -164,8 +165,8 @@ def parsing_country_history(txt):
     Daily Deaths. If the country does not have a case or cases of some kind, for example, Total Deaths = 0,
     It will return a blank list of lists for that case.
     :param txt: the html code (string) of the country's webpage.
-    :return: a dictionary of 5 key cases containing 2 lists for each case: the list for days
-    (usually starting from Feb 15) and a list of cases per day.
+    :return: a dictionary of 6 key cases: name and 5 graphs info. each graph  in a key and it value
+    is another dictionary, which had 2 key-value pair, containing list of dates and list of number of instances
     """
     starting_index = 0
     country_history = {}
@@ -174,7 +175,7 @@ def parsing_country_history(txt):
     for graph in graph_list:
 
         if txt.find(graph) == -1:
-            country_history[graph] = [[]]
+            country_history[graph] = dict()
             continue
 
         starting_index = starting_index + txt[starting_index:].find(graph)
@@ -187,7 +188,7 @@ def parsing_country_history(txt):
         ending_index = starting_index + txt[starting_index:].find(']')
         data_list = txt[starting_index + len('data: ['):ending_index].split(',')
 
-        country_history[graph] = [categories_list, data_list]
+        country_history[graph] = {'dates': categories_list, 'instances': data_list}
 
     return country_history
 
@@ -216,9 +217,8 @@ def countries_to_list(countries_fetch_list, country_list, txt, country_set, coun
 
 def cell_numeric_value(cell):
     """
-     good for both below functions
-     NEED TO FINISH THE DOCUMENTATION
-    :param cell:
+     the helpper function of parsing_country_page function
+     it helps to edit the values of each dictionary key.
     :return:
     """
     cell_final = cell.text.strip()
@@ -232,50 +232,12 @@ def cell_numeric_value(cell):
     return cell_final
 
 
-def parsing_state_page(txt_page):
-    """
-    still not documented - that function thkes the usa url and parses the states data
-    :param txt_page:
-    :return:
-    """
-    soup = BeautifulSoup(txt_page, features="lxml")
-    table = soup.select('#usa_table_countries_today')[0]
-
-    table_list = []
-
-    for table_row in table.findAll('tr'):  # tr = table row in html
-        cells = table_row.findAll('td')  # td = table column in html
-        if len(cells) > 0:
-            country_name = cells[1].text.strip()
-            # I want to ignore the 'total' row
-            if 'Total' in country_name or 'World' in country_name:
-                continue
-
-            table_dictionaries = {
-                'state': country_name,
-                'total cases': cell_numeric_value(cells[2]),
-                'new cases': cell_numeric_value(cells[3]),
-                'total death': cell_numeric_value(cells[4]),
-                'new deaths': cell_numeric_value(cells[5]),
-                'total recovered': cell_numeric_value(cells[6]),
-                'active cases': cell_numeric_value(cells[7]),
-                'cases per 1 million': cell_numeric_value(cells[8]),
-                'deaths per 1 million': cell_numeric_value(cells[9]),
-                'total tests': cell_numeric_value(cells[10]),
-                'test  per1 million': cell_numeric_value(cells[11]),
-                'population': cell_numeric_value(cells[12])
-            }
-            table_list.append(table_dictionaries)
-
-    return table_list
-
-
 def parsing_country_page(txt_page):
     """
-     !!! ERAN !!!
-     this function is good and running!
-    :param txt_page:
-    :return:
+    Searching in the html code for country's relevant data regarding the Coronavirus cases
+    and returning its values in a list of dictionaries, where each dictionary represent a different country.
+    :param txt_page: the HTML code.
+    :return: list of countries dictionaries
     """
     soup = BeautifulSoup(txt_page, features="lxml")
     table = soup.select('#main_table_countries_today')[0]
@@ -287,7 +249,9 @@ def parsing_country_page(txt_page):
 
         if len(cells) > 0:
             country_name = cells[1].text.strip()
-            if 'Total' in country_name or 'World' in country_name:
+            if country_name in ['Total:', 'World', 'North America',
+                                'Asia', 'South America', 'Europe', 'Africa','']:
+
                 continue
 
             table_dictionaries = {
@@ -323,28 +287,26 @@ def parsing_data(countries_fetch_list):
     country_history = {}
 
     try:
+        # countries corona info:
         print(parsing_main_data(txt))
-        print()
 
+        ## eran please clean it and drop what we don't need
         columns_list = parsing_columns_data(COLUMNS_HTML_HEAD, COLUMNS_HTML_TAIL, txt)
         country_list.append(columns_list)
         country_list = countries_to_list(countries_fetch_list, country_list, txt, country_set, country_link_dict)
 
-        for country in country_list:
+        all_countries = parsing_country_page(txt)
+        for country in all_countries:
             print(country)
-        print('\ncountries:', country_set)
-        print('number of countries:', len(country_set), '\n')
+        print('\ncountries:', [x['country'] for x in all_countries])
+        print('number of countries:', len(all_countries), '\n')
 
+        #country history ( from graphs):
         for country in country_set:
             txt = html(URL + 'country/' + country_link_dict[country] + '/')
             country_history[country] = parsing_country_history(txt)
             print(country)
             print(country_history[country])
-
-        usa_states = parsing_state_page(html(USA_URL))
-        for state in usa_states:
-            print(state)
-        print(f'number of USA states and sub-regions: {len(usa_states)}')
 
     except Exception as ex:
         print(ex, ERR_MSG_FETCH)
@@ -400,6 +362,7 @@ def main():
         update_times_list = get_update_times_list(sys.argv[ARG_UPDATES_FILE])
         countries_fetch_list = get_countries_list(sys.argv[ARG_COUNTRIES_FILE])
         print('times=' + str(update_times_list) + ' countries=' + str(countries_fetch_list) + '\n')
+
 
     data_fetched = False
     while True:
