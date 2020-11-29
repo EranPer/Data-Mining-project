@@ -2,8 +2,7 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Date, Integer, St
     update, select, and_, schema
 from sqlalchemy.dialects.mysql import insert
 from datetime import datetime
-from config import COUNTRIES_NAMES_TO_CODES, USER_NAME, PASSWORD, HOST
-
+from config import COUNTRIES_NAMES_TO_CODES
 
 def create_engine(user_name, pswd, host, port=3306, db='corona'):
     """
