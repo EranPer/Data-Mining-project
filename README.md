@@ -26,7 +26,7 @@ The program fetches the data at first and update it in any given time.
 After installation, upload the python file to your favorite Python editor and run the code. 
 Alternatively, run the code from the CLI (i.e. CMD in windows). The usage is the following:
 ```bash
-Usage: coronavirus_2.0.py update_times.txt countries.txt
+Usage: coronavirus_2.1.py update_times.txt countries.txt
 ```
 The default values, when running the code without arguments, will result in fetching all of the countries.
 
