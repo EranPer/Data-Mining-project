@@ -13,7 +13,7 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 - We used requests, beautifulsoup and lxml platforms for creating functions of data parsing. The data is stored in lists, sets and dictionaries. The parsing code runs in a loop that updates the data every interval of time. The user can change the update times by changing it in the constant list in the config file.
 
 ### Checkpoint 2
-- Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line. The code will fetch only relevant country's history, mentioned in the countries file, and will update it any given time, mentioned in the update_times file.<b>tag</b>
+- Command line interface - added web scraper options to be able to call it with different arguments from the terminal. Now you can use update times and countries arguments: 1st argument is a file containing update times to update data (every line in the format 00:00:00) and 2nd file containing countries, in every line. The code will fetch only relevant country's history, mentioned in the ```python countries``` file, and will update it any given time, mentioned in the update_times file.
 
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
