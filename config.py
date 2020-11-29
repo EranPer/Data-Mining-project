@@ -42,10 +42,6 @@ REQUIRED_NUM_OF_ARGS = 3
 ARG_UPDATES_FILE = 1
 ARG_COUNTRIES_FILE = 2
 
-# database personal variables:
-USER_NAME = 'root'
-PASSWORD = 'nofar2008'
-HOST = '127.0.0.1'
 
 COUNTRIES_NAMES_TO_CODES = {
   "Afghanistan": "AFG",
