@@ -18,6 +18,8 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 - Added a Mysql database to the program and its ERD. Now you can create a DB, insert and update the data that being fetched by the webscraper main code.
 
 ### Checkpoint 3
+- Added API query to the project: getting the transmission type for each country.
+
 - Added logging to file and to screen.
 
 - OOP: Now the coronavirus code is Coronavirus class.
