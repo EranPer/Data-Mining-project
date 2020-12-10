@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from config import *
+from API_parser import *
+from creating_db_scraper_api import *
 
 
 class Coronavirus:
@@ -165,10 +167,39 @@ class Coronavirus:
         txt = self.html(self.url)
         country_history = {}
 
+        engine = make_engine(USER, PASSWORD, HOST)
+        connection = create_connection(engine)
+        countries = create_or_use(engine, 'countries')
+        history = create_or_use(engine, 'history')
+        # print(query_db(engine, connection, countries, where="USA"))
+
         try:
             if table == 'all' or table == 'world':
                 # global corona info:
                 print(self.parsing_main_data(txt))
+
+                # each country corona info
+                all_countries = self.parsing_country_page(txt)
+                for country_dict in all_countries:
+                    print(country_dict)
+                    # updating database countries:
+                    if country_dict['country'] in COUNTRIES_NAMES_TO_CODES.keys():
+                        country_code = COUNTRIES_NAMES_TO_CODES[country_dict['country']]
+                        update_data = {'total_cases': country_dict['total cases'],
+                                       'new_cases': country_dict['new cases'],
+                                       'total_deaths': country_dict['total death'],
+                                       'new_deaths': country_dict['new deaths'],
+                                       'total_recovered': country_dict['total recovered'],
+                                       'active_cases': country_dict['active cases'],
+                                       'critical_cases': country_dict['critical cases'],
+                                       'cases_per_1m': country_dict['cases per 1 million'],
+                                       'deaths_per_1m': country_dict['deaths per 1 million'],
+                                       'total_tests': country_dict['total tests'],
+                                       'tests_per_1m': country_dict['test per1 million'],
+                                       'population': country_dict['population']}
+                        update_country_info(countries, country_code, update_data, connection)
+                # # inserting to database
+                # inserting_country_info(all_countries, countries, connection)  # first time insert function
 
             if table == 'all' or table == 'countries':
                 # each country corona info
@@ -192,8 +223,29 @@ class Coronavirus:
                     print(country)
                     print(country_history[country])
 
+                not_in = []
+                for country in countries_fetch_list:
+                    if country not in COUNTRIES_NAMES_TO_CODES.keys():
+                        if country not in COUNTRIES_NAMES_TO_CODES.values():
+                            not_in.append(country)
+
+                for country in countries_fetch_list:
+                    if country not in not_in:
+                        txt = self.html(URL + country_link_dict[country])
+                        country_history[country] = self.parsing_country_history(txt)
+                        # # history to database:
+                        # update the history table in database
+                        if country in COUNTRIES_NAMES_TO_CODES.keys():
+                            country_code = COUNTRIES_NAMES_TO_CODES[country]
+                            if 'dates' in country_history[country].keys():
+                                for date in country_history[country]['dates']:
+                                    add_new_history_info(history, country_code, country_history[country],
+                                                         date, connection, engine, countries)
+                # inserting_history_info(country_history, history, connection, engine, countries)  # first time insert function
+
         except Exception as ex:
             self.logger.error(f'{ERR_MSG_FETCH}')
             raise ValueError(ERR_MSG_FETCH)
         return True
+
 
