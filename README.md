@@ -20,11 +20,11 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 ### Checkpoint 3
 - Added logging to file and to screen.
 
-- Now the coronavirus code is in OOP.
+- OOP: Now the coronavirus code is Coronavirus class.
 
 - Added a main code which creates a coronavirus object from a Coronavirus class. The main code handles all the connections between the web scraping and the database code.
 
-- Added a PyMySql database code.
+- Added argprarse options. Now you can choose which table you want to scrape (default=all) besides the two optional files of ```update_times``` and ```countries```. 
 
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
@@ -35,11 +35,12 @@ pip install -r requirements.txt
 ## How to use the code
 The program fetches the data at first and update it in any given time.
 After installation, upload the python file to your favorite Python editor and run the code. 
-Alternatively, run the code from the CLI (i.e. CMD in windows). The usage is the following:
+Alternatively, you can run the code from the CLI (i.e. CMD in windows). The usage is as following:
 ```bash
-Usage: coronavirus_2.1.py update_times.txt countries.txt
+usage: main.py [-h] [--times times.txt] [--countries countries.txt]
+               [--table {world,countries,history,api,all}]
 ```
-The default values, when running the code without arguments, will result in fetching all of the countries.
+The default values, when running the code without arguments, will result in fetching all tables and all countries.
 
 ## DB documentation
 ![alt text](ERD_coronavirus.png "Coronavirus database")

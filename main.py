@@ -1,23 +1,11 @@
 from coronavirus import Coronavirus
-from coronavirus_db import *
+from API_data_parsing import *
 from config import *
 from datetime import datetime
+import argparse
 import time
 import sys
 import logging
-
-
-def create_database_and_tables():
-    """
-    This function creates database and tables for the data.
-    :return:
-    """
-    create_db(HOST, USER_NAME, PASSWORD)
-
-    db = create_connection(HOST, USER_NAME, PASSWORD)
-    create_table(db, 'countries')
-    create_table(db, 'history')
-    create_table(db, 'countries')
 
 
 def set_logger(log_name='logger.log', level=logging.INFO):
@@ -91,6 +79,42 @@ def get_countries_list(filename):
     return countries_list
 
 
+def get_parser():
+    """
+    This function set arguments for the parser from the argparse package.
+    :return: a parser.
+    """
+    parser = argparse.ArgumentParser(description='Data Mining Project.')
+    parser.add_argument('--times', metavar='times.txt', type=str,
+                        help='A file containing update times in the format 00:00:00.')
+    parser.add_argument('--countries', metavar='countries.txt', type=str,
+                        help='A file containing names of countries.')
+    parser.add_argument('--table', choices=['world', 'countries', 'history', 'api', 'all'],
+                        default='all', help='table choice for scraping (default: all)')
+    return parser
+
+
+def handle_args(args):
+    """
+    This function handles all the arguments from parser
+    :param args:
+    :return:
+    """
+    if vars(args)['times'] is None:
+        update_times_list = UPDATE_TIME
+    else:
+        update_times_list = get_update_times_list(vars(args)['times'])
+
+    if vars(args)['countries'] is None:
+        countries_fetch_list = COUNTRIES_FETCH
+    else:
+        countries_fetch_list = get_countries_list(vars(args)['countries'])
+
+    table = vars(args)['table']
+
+    return update_times_list, countries_fetch_list, table
+
+
 def main():
     """
     The main function. Get user input: Update times and a file containing countries.
@@ -99,35 +123,27 @@ def main():
     """
     logger = set_logger('coronavirus.log')
 
-    create_database_and_tables()
-
     cv = Coronavirus(URL, logger)
 
-    if len(sys.argv) != REQUIRED_NUM_OF_ARGS:
-        print("usage: ./coronavirus_2.0.py times.txt countries.txt")
-        logger.info(f'Number of arguments: {len(sys.argv)}. Taking default args instead')
-        update_times_list = UPDATE_TIME
-        countries_fetch_list = COUNTRIES_FETCH
-        if not countries_fetch_list:
-            stat = 'all'
-        else:
-            stat = countries_fetch_list
-        print('times=' + str(update_times_list) + ' countries=' + str(stat) + '\n')
-    else:
-        update_times_list = get_update_times_list(sys.argv[ARG_UPDATES_FILE])
-        countries_fetch_list = get_countries_list(sys.argv[ARG_COUNTRIES_FILE])
-        logger.info(f'Files were found. times={update_times_list}. countries={countries_fetch_list}')
+    parser = get_parser()
+    args = parser.parse_args()
+    update_times_list, countries_fetch_list, table = handle_args(args)
+    logger.info(f'times={update_times_list}. countries={countries_fetch_list}')
 
     data_fetched = False
     while True:
         # Check for update time if it's time to refresh data or if the code is running for the first time
         if refresh_data(update_times_list) or not data_fetched:
+
             logger.info(f'Started web scraping')
-
-            cv.parsing_data(countries_fetch_list)
+            cv.parsing_data(table, countries_fetch_list)
             data_fetched = True
-
             logger.info(f'Finished web scraping')
+
+            if table == 'all' or table == 'api':
+                logger.info(f'Started API query')
+                print(api_query())
+                logger.info(f'Finished API query')
 
             print('Next update/s will occur at:', update_times_list)
 

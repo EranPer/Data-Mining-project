@@ -156,7 +156,7 @@ class Coronavirus:
 
         return table_list
 
-    def parsing_data(self, countries_fetch_list):
+    def parsing_data(self, table, countries_fetch_list):
         """
         Function parsing_data
         Parsing data of Corona virus cases from the given website.
@@ -166,40 +166,34 @@ class Coronavirus:
         country_history = {}
 
         try:
-            # global corona info:
-            print(self.parsing_main_data(txt))
+            if table == 'all' or table == 'world':
+                # global corona info:
+                print(self.parsing_main_data(txt))
 
-            # each country corona info
-            all_countries = self.parsing_country_page(txt)
-            for country_dict in all_countries:
-                print(country_dict)
+            if table == 'all' or table == 'countries':
+                # each country corona info
+                all_countries = self.parsing_country_page(txt)
+                for country_dict in all_countries:
+                    print(country_dict)
 
-            # countries list and number
-            country_list = [country_dict['country'] for country_dict in all_countries]
-            print('\ncountries:', country_list)
-            print('number of countries:', len(country_list), '\n')
+                # countries list and number
+                country_list = [country_dict['country'] for country_dict in all_countries]
+                print('\ncountries:', country_list)
+                print('number of countries:', len(country_list), '\n')
 
-            # country history (from graphs):
-            country_link_dict = self.get_countries_links(txt)
-            if not countries_fetch_list:
-                countries_fetch_list = country_list
-            for country in countries_fetch_list:
-                txt = self.html(self.url + country_link_dict[country])
-                country_history[country] = self.parsing_country_history(txt)
-                print(country)
-                print(country_history[country])
+            if table == 'all' or table == 'history':
+                # country history (from graphs):
+                country_link_dict = self.get_countries_links(txt)
+                if not countries_fetch_list:
+                    countries_fetch_list = country_list
+                for country in countries_fetch_list:
+                    txt = self.html(self.url + country_link_dict[country])
+                    country_history[country] = self.parsing_country_history(txt)
+                    print(country)
+                    print(country_history[country])
 
         except Exception as ex:
             self.logger.error(f'{ERR_MSG_FETCH}')
             raise ValueError(ERR_MSG_FETCH)
         return True
 
-    def api_request(self, api):
-        """
-        This function returns a json response if the status code is OK.
-        :param api: an api URL.
-        :return: a json response.
-        """
-        response = requests.get(api)
-        if response.status_code == OK_STATUS:
-            return response.json()
