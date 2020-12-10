@@ -28,6 +28,8 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 
 - Added argprarse options. Now you can choose which table you want to scrape (default=all) besides the two optional files of ```update_times``` and ```countries```. 
 
+- Added API and main database interfaces.
+
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
 ```bash
