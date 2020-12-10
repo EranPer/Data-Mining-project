@@ -1,6 +1,12 @@
 """
 Configuration file for the Coronavirus website scraper's main code
 """
+# my data for database
+USER = 'root'
+PASSWORD = 'nofar2008'
+HOST = '127.0.0.1'
+PORT = 3306
+DB = 'corona'
 
 # The main URL to fetch data from
 URL = "https://www.worldometers.info/coronavirus/"
@@ -269,6 +275,8 @@ COUNTRIES_NAMES_TO_CODES = {
   "United Arab Emirates": "ARE",
   "United Kingdom": "GBR",
   "United States": "USA",
+  "US": "USA",
+  "USA": "USA",
   "Uruguay": "URY",
   "U.S. Virgin Islands": "VIR",
   "Uzbekistan": "UZB",
