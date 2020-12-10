@@ -17,6 +17,15 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 
 - Added a Mysql database to the program and its ERD. Now you can create a DB, insert and update the data that being fetched by the webscraper main code.
 
+### Checkpoint 3
+- Added logging to file and to screen.
+
+- Now the coronavirus code is in OOP.
+
+- Added a main code which creates a coronavirus object from a Coronavirus class. The main code handles all the connections between the web scraping and the database code.
+
+- Added a PyMySql database code.
+
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
 ```bash

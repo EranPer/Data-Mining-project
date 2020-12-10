@@ -14,7 +14,7 @@ UPDATE_TIME = ['08:00:00', '16:00:00', '00:00:00']
 COUNTRIES_FETCH = []
 
 # Error message printed when failing to fetch data
-ERR_MSG_FETCH = 'Failed to fetch data. Check HTML code'
+ERR_MSG_FETCH = 'Failed to fetch data. Check HTML code and URL address'
 
 # Error messages printed when failing to open a file and writing to a file
 ERR_FILE_OPEN = 'Failed to open a file!'
@@ -29,6 +29,10 @@ ARG_COUNTRIES_FILE = 2
 USER_NAME = ''
 PASSWORD = ''
 HOST = ''
+
+# API response
+API = "https://api.covidtracking.com/v1/states/current.json"
+OK_STATUS = 200
 
 COUNTRIES_NAMES_TO_CODES = {
   "Afghanistan": "AFG",
