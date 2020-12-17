@@ -25,11 +25,12 @@ def make_engine(user_name, pswd, host, port=3306, db='corona'):
     :param db:
     :return:
     """
-    engine_url =f'mysql+mysqlconnector://{user_name}:{pswd}@{host}:{port}/{db}'
+    engine_url = f'mysql+mysqlconnector://{user_name}:{pswd}@{host}:{port}/{db}'
     if not database_exists(engine_url):
         create_database(engine_url)
     engine = create_engine(engine_url)
     return engine
+
 
 # engine = make_engine(USER, PASSWORD, HOST)
 
@@ -43,6 +44,7 @@ def create_connection(engine):
     """
     connection = engine.connect()
     return connection
+
 
 # connection = create_connection(engine)
 
@@ -113,6 +115,7 @@ def query_db_countries(engine, connection, table, where=None):
         Result = ResultProxy.fetchall()
         return Result
 
+
 def query_db_hystory(engine, connection, table, where=None):
     metadata = MetaData()
     census = Table(table, metadata, autoload=True, autoload_with=engine)
@@ -123,7 +126,7 @@ def query_db_hystory(engine, connection, table, where=None):
         return Result
 
 
-def inserting_country_info(countries_info, countries_table, connection):
+def inserting_country_info(countries_info, countries_table, transmission, connection):
     """
     mainly for first usage: to insert the data into the countries table
     :param countries_info: a list of dictionaries, each represents a country, with the following values:
@@ -135,7 +138,6 @@ def inserting_country_info(countries_info, countries_table, connection):
     :param connection: the direct connection to the relevant mysql database.
     """
     for i, row in enumerate(countries_info):
-        transmission = api_query()
         for country in transmission.keys():
             if country.title() == row['country'].title():
                 row['transmission'] = transmission[country]
@@ -157,6 +159,12 @@ def inserting_country_info(countries_info, countries_table, connection):
                 connection.execute(stmt)
 
 
+def organize_history_data(key, value, i):
+    if 'instances' in key[value].keys():
+        if (key[value]['instances'][i].isnumeric()):
+            return int(key[value]['instances'][i])
+
+
 def inserting_history_info(history_info, history_table, connection, engine, countries_table):
     """
     inserts the data into the history table.
@@ -169,40 +177,23 @@ def inserting_history_info(history_info, history_table, connection, engine, coun
     for key, value in history_info.items():
         raw = query_db_countries(engine, connection, countries_table, where=COUNTRIES_NAMES_TO_CODES[key])
         if len(raw) > 0 or key == 'US':
-            all_dates=[]
+            all_dates = []
             all_values = [history_info[key]['Total Cases'], history_info[key]['Daily New Cases'],
-                            history_info[key]['Active Cases'], history_info[key]['Total Deaths'],
-                            history_info[key]['Daily Deaths']]
+                          history_info[key]['Active Cases'], history_info[key]['Total Deaths'],
+                          history_info[key]['Daily Deaths']]
             for lst in all_values:
                 if 'dates' in lst.keys() and len(lst['dates']) > 0:
                     all_dates.extend(lst['dates'])
             all_dates = set(all_dates)
-
             dates = [datetime.strptime(f'{x} 20', '%b %d %y') for x in all_dates]
 
             for i in range(len(dates) - 1):
-                values = {'date': dates[i], 'country_id': COUNTRIES_NAMES_TO_CODES[key]}
-
-                if 'instances' in history_info[key]['Total Cases'].keys():
-                    if (history_info[key]['Total Cases']['instances'][i].isnumeric()):
-                        values['total_cases_g'] = int(history_info[key]['Total Cases']['instances'][i])
-
-                if 'instances' in history_info[key]['Daily New Cases'].keys():
-                    if (history_info[key]['Daily New Cases']['instances'][i].isnumeric()):
-                        values['daily_cases_g'] = int(history_info[key]['Daily New Cases']['instances'][i])
-
-                if 'instances' in history_info[key]['Active Cases'].keys():
-                    if (history_info[key]['Active Cases']['instances'][i].isnumeric()):
-                        values['active_cases_g'] = int(history_info[key]['Active Cases']['instances'][i])
-
-                if 'instances' in history_info[key]['Total Deaths']:
-                    if (history_info[key]['Total Deaths']['instances'][i].isnumeric()):
-                        values['total_death_g'] = int(history_info[key]['Total Deaths']['instances'][i])
-
-                if 'instances' in history_info[key]['Daily Deaths'].keys():
-                    if (history_info[key]['Daily Deaths']['instances'][i].isnumeric()):
-                        values['daily_deaths'] = int(history_info[key]['Daily Deaths']['instances'][i])
-
+                values = {'date': dates[i], 'country_id': COUNTRIES_NAMES_TO_CODES[key],
+                          'total_cases_g': organize_history_data(history_info[key], 'Total Cases', i),
+                          'daily_cases_g': organize_history_data(history_info[key], 'Daily New Cases', i),
+                          'active_cases_g': organize_history_data(history_info[key], 'Active Cases', i),
+                          'total_death_g': organize_history_data(history_info[key], 'Total Deaths', i),
+                          'daily_deaths': organize_history_data(history_info[key], 'Daily Deaths', i)}
                 stmt = insert(history_table).values(values)
                 connection.execute(stmt)
         else:
@@ -240,7 +231,7 @@ def add_new_history_info(history_table, country_code, values_to_add, date, conne
     row = query_db_hystory(engine, connection, history_table, where=country_code)
     if len(row) > 0:
         stmt = select([history_table]).where((history_table.c.country_id == country_code) &
-                                       (history_table.c.date == datetime.strptime(f'{date} 2020', '%b %d %Y')))
+                                             (history_table.c.date == datetime.strptime(f'{date} 2020', '%b %d %Y')))
         result = connection.execute(stmt).fetchall()
         if len(result) == 0:
             inserting_history_info(values_to_add, history_table, connection, engine, countries_table)

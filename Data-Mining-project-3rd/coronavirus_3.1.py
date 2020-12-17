@@ -158,6 +158,36 @@ class Coronavirus:
 
         return table_list
 
+    @staticmethod
+    def county_update(country_dict):
+        if country_dict['country'] in COUNTRIES_NAMES_TO_CODES.keys():
+            country = country_dict['country']
+            country_code = COUNTRIES_NAMES_TO_CODES[country_dict['country']]
+            update_data = {'total_cases': country_dict['total cases'],
+                           'new_cases': country_dict['new cases'],
+                           'total_deaths': country_dict['total death'],
+                           'new_deaths': country_dict['new deaths'],
+                           'total_recovered': country_dict['total recovered'],
+                           'active_cases': country_dict['active cases'],
+                           'critical_cases': country_dict['critical cases'],
+                           'cases_per_1m': country_dict['cases per 1 million'],
+                           'deaths_per_1m': country_dict['deaths per 1 million'],
+                           'total_tests': country_dict['total tests'],
+                           'tests_per_1m': country_dict['test per1 million'],
+                           'population': country_dict['population']}
+
+            return country, update_data, country_code
+
+    @staticmethod
+    def history_update(country, history_table, values_to_add, connection, engine, countries_table):
+        if country in COUNTRIES_NAMES_TO_CODES.keys():
+            country_code = COUNTRIES_NAMES_TO_CODES[country]
+            if 'dates' in values_to_add.keys():
+                for date in values_to_add['dates']:
+                    add_new_history_info(history_table, country_code, values_to_add,
+                                         date, connection, engine, countries_table)
+
+
     def parsing_data(self, table, countries_fetch_list):
         """
         Function parsing_data
@@ -171,7 +201,6 @@ class Coronavirus:
         connection = create_connection(engine)
         countries = create_or_use(engine, 'countries')
         history = create_or_use(engine, 'history')
-        # print(query_db(engine, connection, countries, where="USA"))
 
         try:
             if table == 'all' or table == 'world':
@@ -183,23 +212,11 @@ class Coronavirus:
                 for country_dict in all_countries:
                     print(country_dict)
                     # updating database countries:
-                    if country_dict['country'] in COUNTRIES_NAMES_TO_CODES.keys():
-                        country_code = COUNTRIES_NAMES_TO_CODES[country_dict['country']]
-                        update_data = {'total_cases': country_dict['total cases'],
-                                       'new_cases': country_dict['new cases'],
-                                       'total_deaths': country_dict['total death'],
-                                       'new_deaths': country_dict['new deaths'],
-                                       'total_recovered': country_dict['total recovered'],
-                                       'active_cases': country_dict['active cases'],
-                                       'critical_cases': country_dict['critical cases'],
-                                       'cases_per_1m': country_dict['cases per 1 million'],
-                                       'deaths_per_1m': country_dict['deaths per 1 million'],
-                                       'total_tests': country_dict['total tests'],
-                                       'tests_per_1m': country_dict['test per1 million'],
-                                       'population': country_dict['population']}
-                        update_country_info(countries, country_code, update_data, connection)
+                    country, update_data, country_code = self.county_update(country_dict)
+                    update_country_info(country, country_code, update_data, connection)
                 # # inserting to database
-                # inserting_country_info(all_countries, countries, connection)  # first time insert function
+                transmission = api_query()
+                # inserting_country_info(all_countries, countries, transmission, connection) # first time insert function
 
             if table == 'all' or table == 'countries':
                 # each country corona info
@@ -210,18 +227,16 @@ class Coronavirus:
                 # countries list and number
                 country_list = [country_dict['country'] for country_dict in all_countries]
                 print('\ncountries:', country_list)
-                print('number of countries:', len(country_list), '\n')
 
             if table == 'all' or table == 'history':
                 # country history (from graphs):
                 country_link_dict = self.get_countries_links(txt)
                 if not countries_fetch_list:
-                    countries_fetch_list = country_list
+                    countries_fetch_list = country_list    # TODO: Eran after you changed it to OOP this part is a problem.
                 for country in countries_fetch_list:
                     txt = self.html(self.url + country_link_dict[country])
                     country_history[country] = self.parsing_country_history(txt)
-                    print(country)
-                    print(country_history[country])
+                    print(f'{country}\n{country_history[country]}')
 
                 not_in = []
                 for country in countries_fetch_list:
@@ -235,13 +250,10 @@ class Coronavirus:
                         country_history[country] = self.parsing_country_history(txt)
                         # # history to database:
                         # update the history table in database
-                        if country in COUNTRIES_NAMES_TO_CODES.keys():
-                            country_code = COUNTRIES_NAMES_TO_CODES[country]
-                            if 'dates' in country_history[country].keys():
-                                for date in country_history[country]['dates']:
-                                    add_new_history_info(history, country_code, country_history[country],
-                                                         date, connection, engine, countries)
-                # inserting_history_info(country_history, history, connection, engine, countries)  # first time insert function
+                        self.history_update(country, history, country_history[country],
+                                            connection, engine, countries)
+                # first time insert function
+                # inserting_history_info(country_history, history, connection, engine, countries)
 
         except Exception as ex:
             self.logger.error(f'{ERR_MSG_FETCH}')
