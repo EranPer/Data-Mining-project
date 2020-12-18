@@ -51,7 +51,7 @@ The default values, when running the code without arguments, will result in fetc
 
 The database includes 2 tables: country coronavirus cases and the history of cases for each country.
 
-- countries table includes 14 columns: country id code (primary key), name of country, total coronavirus cases, new coronavirus cases, total deaths, new deaths, total recovered, active cases, critical cases, cases per 1 million, deaths per 1 million, total tests, tests per 1 million and population number.
+- countries table includes 14 columns: country id code (primary key), name of country, total coronavirus cases, new coronavirus cases, total deaths, new deaths, total recovered, active cases, critical cases, cases per 1 million, deaths per 1 million, total tests, tests per 1 million and population number. Added additional column for the transmission type parsed from an API.
 
 - history table includes 8 columns: id (primary key), date by day, total cases, daily new cases, active cases, total deaths, daily deaths and country id (foreign key).
 
