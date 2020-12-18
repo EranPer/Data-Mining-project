@@ -47,7 +47,7 @@ usage: main.py [-h] [--times times.txt] [--countries countries.txt]
 The default values, when running the code without arguments, will result in fetching all tables and all countries.
 
 ## DB documentation
-![alt text](ERD1_coronavirus.png "Coronavirus database")
+![alt text](ERD_coronavirus.png "Coronavirus database")
 
 The database includes 2 tables: country coronavirus cases and the history of cases for each country.
 
