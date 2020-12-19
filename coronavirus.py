@@ -235,9 +235,10 @@ class Coronavirus:
 
                 # for each country fetch its history
                 for country in countries_fetch_list:
-                    txt = self.html(self.url + country_link_dict[country])
-                    country_history[country] = self.parsing_country_history(txt)
-                    print(f'{country}\n{country_history[country]}')
+                    if country in COUNTRIES_NAMES_TO_CODES.keys():
+                        txt = self.html(self.url + country_link_dict[country])
+                        country_history[country] = self.parsing_country_history(txt)
+                        print(f'{country}\n{country_history[country]}')
                 self.history = country_history
 
         except Exception as ex:
