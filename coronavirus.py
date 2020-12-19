@@ -1,8 +1,6 @@
-import requests
 from bs4 import BeautifulSoup
 from config import *
-from API_parser import *
-from creating_db_scraper_api import *
+import requests
 
 
 class Coronavirus:
@@ -12,6 +10,27 @@ class Coronavirus:
     def __init__(self, url, logger):
         self.url = url
         self.logger = logger
+        self.world = {}
+        self.countries = []
+        self.history = {}
+
+    def get_global(self):
+        """
+        :return: global data
+        """
+        return self.world
+
+    def get_countries(self):
+        """
+        :return: countries data
+        """
+        return self.countries
+
+    def get_history(self):
+        """
+        :return: history data
+        """
+        return self.history
 
     def html(self, url):
         """
@@ -158,7 +177,28 @@ class Coronavirus:
 
         return table_list
 
-    def parsing_data(self, table, countries_fetch_list):
+    @staticmethod
+    def country_update(country_dict):
+        if country_dict['country'] in COUNTRIES_NAMES_TO_CODES.keys():
+            country = country_dict['country']
+            country_code = COUNTRIES_NAMES_TO_CODES[country_dict['country']]
+            update_data = {'total_cases': country_dict['total cases'],
+                           'new_cases': country_dict['new cases'],
+                           'total_deaths': country_dict['total death'],
+                           'new_deaths': country_dict['new deaths'],
+                           'total_recovered': country_dict['total recovered'],
+                           'active_cases': country_dict['active cases'],
+                           'critical_cases': country_dict['critical cases'],
+                           'cases_per_1m': country_dict['cases per 1 million'],
+                           'deaths_per_1m': country_dict['deaths per 1 million'],
+                           'total_tests': country_dict['total tests'],
+                           'tests_per_1m': country_dict['test per1 million'],
+                           'population': country_dict['population']}
+
+            return country, update_data, country_code
+        return None, None, None
+
+    def web_scraper(self, table, countries_fetch_list):
         """
         Function parsing_data
         Parsing data of Corona virus cases from the given website.
@@ -167,81 +207,38 @@ class Coronavirus:
         txt = self.html(self.url)
         country_history = {}
 
-        engine = make_engine(USER, PASSWORD, HOST)
-        connection = create_connection(engine)
-        countries = create_or_use(engine, 'countries')
-        history = create_or_use(engine, 'history')
-        # print(query_db(engine, connection, countries, where="USA"))
-
         try:
+            # Fetching global data and printing to console
             if table == 'all' or table == 'world':
                 # global corona info:
-                print(self.parsing_main_data(txt))
+                self.world = self.parsing_main_data(txt)
+                print(self.world)
 
-                # each country corona info
-                all_countries = self.parsing_country_page(txt)
-                for country_dict in all_countries:
-                    print(country_dict)
-                    # updating database countries:
-                    if country_dict['country'] in COUNTRIES_NAMES_TO_CODES.keys():
-                        country_code = COUNTRIES_NAMES_TO_CODES[country_dict['country']]
-                        update_data = {'total_cases': country_dict['total cases'],
-                                       'new_cases': country_dict['new cases'],
-                                       'total_deaths': country_dict['total death'],
-                                       'new_deaths': country_dict['new deaths'],
-                                       'total_recovered': country_dict['total recovered'],
-                                       'active_cases': country_dict['active cases'],
-                                       'critical_cases': country_dict['critical cases'],
-                                       'cases_per_1m': country_dict['cases per 1 million'],
-                                       'deaths_per_1m': country_dict['deaths per 1 million'],
-                                       'total_tests': country_dict['total tests'],
-                                       'tests_per_1m': country_dict['test per1 million'],
-                                       'population': country_dict['population']}
-                        update_country_info(countries, country_code, update_data, connection)
-                # # inserting to database
-                # inserting_country_info(all_countries, countries, connection)  # first time insert function
-
+            # Fetching countries data
             if table == 'all' or table == 'countries':
-                # each country corona info
-                all_countries = self.parsing_country_page(txt)
-                for country_dict in all_countries:
+                self.countries = self.parsing_country_page(txt)
+
+                # Printing countries data to console
+                for country_dict in self.countries:
+                    # each country corona info
                     print(country_dict)
 
-                # countries list and number
-                country_list = [country_dict['country'] for country_dict in all_countries]
-                print('\ncountries:', country_list)
-                print('number of countries:', len(country_list), '\n')
+                # the list of countries
+                country_list = [country_dict['country'] for country_dict in self.countries]
+                print(len(country_list), 'countries:', country_list)
 
             if table == 'all' or table == 'history':
-                # country history (from graphs):
+                # get link for each country webpage:
                 country_link_dict = self.get_countries_links(txt)
                 if not countries_fetch_list:
                     countries_fetch_list = country_list
+
+                # for each country fetch its history
                 for country in countries_fetch_list:
                     txt = self.html(self.url + country_link_dict[country])
                     country_history[country] = self.parsing_country_history(txt)
-                    print(country)
-                    print(country_history[country])
-
-                not_in = []
-                for country in countries_fetch_list:
-                    if country not in COUNTRIES_NAMES_TO_CODES.keys():
-                        if country not in COUNTRIES_NAMES_TO_CODES.values():
-                            not_in.append(country)
-
-                for country in countries_fetch_list:
-                    if country not in not_in:
-                        txt = self.html(URL + country_link_dict[country])
-                        country_history[country] = self.parsing_country_history(txt)
-                        # # history to database:
-                        # update the history table in database
-                        if country in COUNTRIES_NAMES_TO_CODES.keys():
-                            country_code = COUNTRIES_NAMES_TO_CODES[country]
-                            if 'dates' in country_history[country].keys():
-                                for date in country_history[country]['dates']:
-                                    add_new_history_info(history, country_code, country_history[country],
-                                                         date, connection, engine, countries)
-                # inserting_history_info(country_history, history, connection, engine, countries)  # first time insert function
+                    print(f'{country}\n{country_history[country]}')
+                self.history = country_history
 
         except Exception as ex:
             self.logger.error(f'{ERR_MSG_FETCH}')

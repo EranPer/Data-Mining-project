@@ -1,17 +1,10 @@
 from datetime import datetime
+
 from sqlalchemy_utils.functions import database_exists, create_database
 from sqlalchemy import create_engine, MetaData, Table, Column, Date, Integer, String, Float, ForeignKey, \
     update, select, schema
 from sqlalchemy.dialects.mysql import insert
-
-from API_parser import api_query
-from config import COUNTRIES_NAMES_TO_CODES
-
-USER = ''
-PASSWORD = ''
-HOST = ''
-PORT = 3306
-DB = 'corona'
+from config import *
 
 
 def make_engine(user_name, pswd, host, port=3306, db='corona'):
@@ -60,8 +53,8 @@ def create_or_use(engine, variable_table_name):
         if variable_table_name == 'countries':
             # Create a table with the appropriate Columns
             Table(variable_table_name, metadata,
-                  Column('id', String, primary_key=True, index=True, nullable=False, unique=True),
-                  Column('name', String), Column('total_cases', Integer), Column('new_cases', Integer),
+                  Column('id', String(3), primary_key=True, index=True, nullable=False, unique=True),
+                  Column('name', String(255)), Column('total_cases', Integer), Column('new_cases', Integer),
                   Column('total_deaths', Integer), Column('new_deaths', Integer),
                   Column('total_recovered', Integer), Column('active_cases', Integer),
                   Column('critical_cases', Integer), Column('cases_per_1m', Float), Column('deaths_per_1m', Float),
@@ -74,9 +67,9 @@ def create_or_use(engine, variable_table_name):
             # Create a table with the appropriate Columns
             Table(variable_table_name, metadata,
                   Column('id', Integer, primary_key=True, nullable=False),
-                  Column('country_Id', String, ForeignKey("countries.id"), nullable=False),
-                  Column('date', Date), Column('total_cases_g', Integer), Column('daily_cases_g', Integer),
-                  Column('active_cases_g', Integer), Column('total_deaths_g', Integer),
+                  Column('country_id', String(3), nullable=False),
+                  Column('date', Date), Column('total_cases', Integer), Column('daily_cases', Integer),
+                  Column('active_cases', Integer), Column('total_deaths', Integer),
                   Column('daily_deaths', Integer))
             # Implement the creation
             metadata.create_all()
@@ -85,7 +78,7 @@ def create_or_use(engine, variable_table_name):
             # Create a table with the appropriate Columns
             Table(variable_table_name, metadata,
                   Column('id', Integer, primary_key=True, nullable=False, unique=True),
-                  Column('country_Id', String, ForeignKey("countries.id"), nullable=False),
+                  Column('country_id', String, nullable=False),
                   Column('name', String), Column('total_cases', Integer), Column('new_cases', Integer),
                   Column('total_deaths', Integer), Column('new_deaths', Integer),
                   Column('total_recovered', Integer), Column('active_cases', Integer),
@@ -93,11 +86,14 @@ def create_or_use(engine, variable_table_name):
                   Column('total_tests', Integer), Column('tests_per_1m', Float), Column('population', Integer))
             # Implement the creation
             metadata.create_all()
+        table_created = True
+    else:
+        table_created = False
 
     # reflect the data in database:
     metadata = MetaData()
     table_name = Table(variable_table_name, metadata, autoload=True, autoload_with=engine)
-    return table_name
+    return table_name, table_created
 
 
 # countries = create_or_use(engine, 'countries')
@@ -113,7 +109,8 @@ def query_db_countries(engine, connection, table, where=None):
         Result = ResultProxy.fetchall()
         return Result
 
-def query_db_hystory(engine, connection, table, where=None):
+
+def query_db_history(engine, connection, table, where=None):
     metadata = MetaData()
     census = Table(table, metadata, autoload=True, autoload_with=engine)
     if where is not None:
@@ -123,7 +120,7 @@ def query_db_hystory(engine, connection, table, where=None):
         return Result
 
 
-def inserting_country_info(countries_info, countries_table, connection):
+def inserting_country_info(countries_info, countries_table, connection, transmission):
     """
     mainly for first usage: to insert the data into the countries table
     :param countries_info: a list of dictionaries, each represents a country, with the following values:
@@ -134,27 +131,32 @@ def inserting_country_info(countries_info, countries_table, connection):
     :param countries_table: the table name we want to insert the data to (-> the countries table)
     :param connection: the direct connection to the relevant mysql database.
     """
-    for i, row in enumerate(countries_info):
-        transmission = api_query()
-        for country in transmission.keys():
-            if country.title() == row['country'].title():
-                row['transmission'] = transmission[country]
-                stmt = insert(countries_table).values(id=COUNTRIES_NAMES_TO_CODES[row['country']],
-                                                      name=row['country'],
-                                                      total_cases=row['total cases'],
-                                                      new_cases=row['new cases'],
-                                                      total_deaths=row['total death'],
-                                                      new_deaths=row['new deaths'],
-                                                      total_recovered=row['total recovered'],
-                                                      active_cases=row['active cases'],
-                                                      critical_cases=row['critical cases'],
-                                                      cases_per_1m=row['cases per 1 million'],
-                                                      deaths_per_1m=row['deaths per 1 million'],
-                                                      total_tests=row['total tests'],
-                                                      tests_per_1m=row['test per1 million'],
-                                                      population=row['population'],
-                                                      transmission_type=row['transmission'])
-                connection.execute(stmt)
+    for row in countries_info:
+        # Check if a country's name is valid, i.e., have 3-letter code in the config dict
+        if row['country'] in COUNTRIES_NAMES_TO_CODES.keys():
+            # Check if the country has a transmission type (put -1 o.w.)
+            if COUNTRIES_NAMES_TO_CODES[row['country']] in transmission.keys():
+                row['transmission'] = transmission[COUNTRIES_NAMES_TO_CODES[row['country']]]['type']
+            else:
+                row['transmission'] = -1
+
+            stmt = insert(countries_table).values(id=COUNTRIES_NAMES_TO_CODES[row['country']],
+                                                  name=row['country'],
+                                                  total_cases=row['total cases'],
+                                                  new_cases=row['new cases'],
+                                                  total_deaths=row['total death'],
+                                                  new_deaths=row['new deaths'],
+                                                  total_recovered=row['total recovered'],
+                                                  active_cases=row['active cases'],
+                                                  critical_cases=row['critical cases'],
+                                                  cases_per_1m=row['cases per 1 million'],
+                                                  deaths_per_1m=row['deaths per 1 million'],
+                                                  total_tests=row['total tests'],
+                                                  tests_per_1m=row['test per1 million'],
+                                                  population=row['population'],
+                                                  transmission_type=row['transmission']
+                                                  )
+            connection.execute(stmt)
 
 
 def inserting_history_info(history_info, history_table, connection, engine, countries_table):
@@ -169,10 +171,10 @@ def inserting_history_info(history_info, history_table, connection, engine, coun
     for key, value in history_info.items():
         raw = query_db_countries(engine, connection, countries_table, where=COUNTRIES_NAMES_TO_CODES[key])
         if len(raw) > 0 or key == 'US':
-            all_dates=[]
+            all_dates = []
             all_values = [history_info[key]['Total Cases'], history_info[key]['Daily New Cases'],
-                            history_info[key]['Active Cases'], history_info[key]['Total Deaths'],
-                            history_info[key]['Daily Deaths']]
+                          history_info[key]['Active Cases'], history_info[key]['Total Deaths'],
+                          history_info[key]['Daily Deaths']]
             for lst in all_values:
                 if 'dates' in lst.keys() and len(lst['dates']) > 0:
                     all_dates.extend(lst['dates'])
@@ -184,23 +186,23 @@ def inserting_history_info(history_info, history_table, connection, engine, coun
                 values = {'date': dates[i], 'country_id': COUNTRIES_NAMES_TO_CODES[key]}
 
                 if 'instances' in history_info[key]['Total Cases'].keys():
-                    if (history_info[key]['Total Cases']['instances'][i].isnumeric()):
-                        values['total_cases_g'] = int(history_info[key]['Total Cases']['instances'][i])
+                    if history_info[key]['Total Cases']['instances'][i].isnumeric():
+                        values['total_cases'] = int(history_info[key]['Total Cases']['instances'][i])
 
                 if 'instances' in history_info[key]['Daily New Cases'].keys():
-                    if (history_info[key]['Daily New Cases']['instances'][i].isnumeric()):
-                        values['daily_cases_g'] = int(history_info[key]['Daily New Cases']['instances'][i])
+                    if history_info[key]['Daily New Cases']['instances'][i].isnumeric():
+                        values['daily_cases'] = int(history_info[key]['Daily New Cases']['instances'][i])
 
                 if 'instances' in history_info[key]['Active Cases'].keys():
-                    if (history_info[key]['Active Cases']['instances'][i].isnumeric()):
-                        values['active_cases_g'] = int(history_info[key]['Active Cases']['instances'][i])
+                    if history_info[key]['Active Cases']['instances'][i].isnumeric():
+                        values['active_cases'] = int(history_info[key]['Active Cases']['instances'][i])
 
                 if 'instances' in history_info[key]['Total Deaths']:
-                    if (history_info[key]['Total Deaths']['instances'][i].isnumeric()):
-                        values['total_death_g'] = int(history_info[key]['Total Deaths']['instances'][i])
+                    if history_info[key]['Total Deaths']['instances'][i].isnumeric():
+                        values['total_deaths'] = int(history_info[key]['Total Deaths']['instances'][i])
 
                 if 'instances' in history_info[key]['Daily Deaths'].keys():
-                    if (history_info[key]['Daily Deaths']['instances'][i].isnumeric()):
+                    if history_info[key]['Daily Deaths']['instances'][i].isnumeric():
                         values['daily_deaths'] = int(history_info[key]['Daily Deaths']['instances'][i])
 
                 stmt = insert(history_table).values(values)
@@ -211,18 +213,36 @@ def inserting_history_info(history_info, history_table, connection, engine, coun
 
 def update_country_info(countries_table, country_code, values_to_update, connection):
     """
-    update an excisting value, by explicitly give the specific country_id.
+    update an existing value, by explicitly give the specific country_id.
     :param countries_table:
     :param country_code: the country_id (3-letter-based string for a specific country,
     which is a universal convention instead of numeric id).
     :param values_to_update: what are the values we want to see the table.
     :param connection: the direct connection to the relevant mysql database.
     """
-    stmt = update(countries_table).where(countries_table.c.id == country_code).values(values_to_update)
-    connection.execute(stmt)
+    if country_code in COUNTRIES_NAMES_TO_CODES.keys():
+        stmt = update(countries_table).where(countries_table.c.id == country_code).values(values_to_update)
+        connection.execute(stmt)
 
 
 # update_country_info(countries, 'SRB',{'new_cases':2}, connection)
+def history_update(country, history_table, values_to_add, connection, engine, countries_table):
+    """
+    Function that updates the history for each country.
+    :param country:
+    :param history_table:
+    :param values_to_add:
+    :param connection:
+    :param engine:
+    :param countries_table:
+    :return:
+    """
+    if country in COUNTRIES_NAMES_TO_CODES.keys():
+        country_code = COUNTRIES_NAMES_TO_CODES[country]
+        if 'dates' in values_to_add.keys():
+            for date in values_to_add['dates']:
+                add_new_history_info(history_table, country_code, values_to_add,
+                                     date, connection, engine, countries_table)
 
 def add_new_history_info(history_table, country_code, values_to_add, date, connection, engine, countries_table):
     """
@@ -237,7 +257,7 @@ def add_new_history_info(history_table, country_code, values_to_add, date, conne
     :param date: the date where we want to see the new value
     :param connection: the direct connection to the relevant mysql database.
     """
-    row = query_db_hystory(engine, connection, history_table, where=country_code)
+    row = query_db_history(engine, connection, history_table, where=country_code)
     if len(row) > 0:
         stmt = select([history_table]).where((history_table.c.country_id == country_code) &
                                        (history_table.c.date == datetime.strptime(f'{date} 2020', '%b %d %Y')))

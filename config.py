@@ -26,12 +26,12 @@ ARG_UPDATES_FILE = 1
 ARG_COUNTRIES_FILE = 2
 
 # database personal variables:
-USER_NAME = ''
-PASSWORD = ''
-HOST = ''
+USER_NAME = 'root'
+PASSWORD = 'nofaranderan'
+HOST = 'localhost'
 
-# API response
-API = "https://api.covidtracking.com/v1/states/current.json"
+## The API address:
+API = "https://who-covid-19-data.p.rapidapi.com/api/data"
 OK_STATUS = 200
 
 COUNTRIES_NAMES_TO_CODES = {
@@ -76,7 +76,9 @@ COUNTRIES_NAMES_TO_CODES = {
   "Cabo Verde": "CPV",
   "Cayman Islands": "CYM",
   "Central African Republic": "CAF",
+  "CAR": "CAR",
   "Chad": "TCD",
+  "Channel Islands": "CIS",
   "Chile": "CHL",
   "China": "CHN",
   "Colombia": "COL",
@@ -84,6 +86,7 @@ COUNTRIES_NAMES_TO_CODES = {
   "Cook Islands": "COK",
   "Costa Rica": "CRI",
   "Côte dIvoire": "CIV",
+  "Ivory Coast": "CIV",
   "Croatia": "HRV",
   "Cuba": "CUB",
   "Curaçao": "CUW",
@@ -93,6 +96,7 @@ COUNTRIES_NAMES_TO_CODES = {
   "Djibouti": "DJI",
   "Dominica": "DMA",
   "Dominican Republic": "DOM",
+  "DRC": "DRC",
   "Ecuador": "ECU",
   "Egypt": "EGY",
   "El Salvador": "SLV",
@@ -102,6 +106,7 @@ COUNTRIES_NAMES_TO_CODES = {
   "Ethiopia": "ETH",
   "Falkland Islands": "FLK",
   "Faroe Islands": "FRO",
+  "Faeroe Islands": "FRO",
   "Federated States of Micronesia": "FSM",
   "Fiji": "FJI",
   "Finland": "FIN",
@@ -132,6 +137,7 @@ COUNTRIES_NAMES_TO_CODES = {
   "Iran": "IRN",
   "Iraq": "IRQ",
   "Ireland": "IRL",
+  "Isle of Man": "IOP",
   "Israel": "ISR",
   "Italy": "ITA",
   "Jamaica": "JAM",
@@ -185,6 +191,7 @@ COUNTRIES_NAMES_TO_CODES = {
   "Niue": "NIU",
   "Norfolk Island": "NFK",
   "North Korea": "PRK",
+  "North Macedonia": "MKD",
   "Northern Mariana Islands": "MNP",
   "Norway": "NOR",
   "Oman": "OMN",
@@ -213,20 +220,21 @@ COUNTRIES_NAMES_TO_CODES = {
   "Saint Vincent and the Grenadines": "VCT",
   "Samoa": "WSM",
   "San Marino": "SMR",
-  "São Tomé and Príncipe": "STP",
+  "Sao Tome and Principe": "STP",
   "Saudi Arabia": "SAU",
   "Senegal": "SEN",
   "Serbia": "SRB",
   "Seychelles": "SYC",
   "Sierra Leone": "SLE",
   "Singapore": "SGP",
-  "Sint Maarten (Dutch part)": "SXM",
+  "Sint Maarten": "SXM",
   "Slovakia": "SVK",
   "Slovenia": "SVN",
   "Solomon Islands": "SLB",
   "Somalia": "SOM",
   "South Africa": "ZAF",
   "South Korea": "KOR",
+  "S. Korea": "KOR",
   "South Sudan": "SSD",
   "Spain": "ESP",
   "Sri Lanka": "LKA",
@@ -234,9 +242,11 @@ COUNTRIES_NAMES_TO_CODES = {
   "Sudan": "SDN",
   "Suriname": "SUR",
   "Swaziland": "SWZ",
+  "Eswatini": "SWZ",
   "Sweden": "SWE",
   "Switzerland": "CHE",
   "Syrian Arab Republic": "SYR",
+  "Syria": "SYR",
   "Taiwan": "TWN",
   "Tajikistan": "TJK",
   "Tanzania": "TZA",
@@ -251,13 +261,15 @@ COUNTRIES_NAMES_TO_CODES = {
   "Tunisia": "TUN",
   "Turkey": "TUR",
   "Turkmenistan": "TKM",
-  "Turks and Caicos Islands": "TCA",
+  "Turks and Caicos": "TCA",
   "Tuvalu": "TUV",
   "Uganda": "UGA",
   "Ukraine": "UKR",
-  "United Arab Emirates": "ARE",
+  "UAE": "ARE",
   "United Kingdom": "GBR",
+  "UK": "GBR",
   "United States": "USA",
+  "USA": "USA",
   "Uruguay": "URY",
   "U.S. Virgin Islands": "VIR",
   "Uzbekistan": "UZB",
