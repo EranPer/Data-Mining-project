@@ -1,7 +1,7 @@
 ![Build Status](https://www.itc.tech/wp-content/uploads/2018/03/site-logo.png)
 
 # Data Mining Project - Coronavirus Cases Web Scraper
-This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetchs the data when running it first, and updates it every x time.
+This python code uses the Coronavirus website https://www.worldometers.info/coronavirus/ to fetch data about the virus. The data is both globally and individually for each country , and its history, of coronavirus cases. The code fetches the data when running it at first, and updates it on every interval.
 
 ## Team Members
 [Eran Perelman](https://github.com/EranPer/ "Eran Perelman's GitHub")<br/>
