@@ -37,7 +37,7 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 
 - Setting up a dashboard using Redash.io.
 
-### presentation
+### Presentation
 
 - The scraped data.
 - Some numbers about the scraped data.
