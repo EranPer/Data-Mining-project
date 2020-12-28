@@ -42,7 +42,7 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 - The scraped data.
 - Some numbers about the scraped data.
 - Database structure and its structure.
-- The data enriching source and what has been able to get from there.
+- The data enriching source and what we were able to get from there.
 - Challenges we experienced and how we faced them.
 - A short demo of the visualisation.
 - Insights or conclusions.
