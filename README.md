@@ -30,6 +30,23 @@ This python code uses the Coronavirus website https://www.worldometers.info/coro
 
 - Added API and main database interfaces.
 
+### Demo Day
+- Installation and running the program on an AWS machine.
+
+- Creating a MySql database on the AWS.
+
+- Setting up a dashboard using Redash.io.
+
+### presentation
+
+- The scraped data.
+- Some numbers about the scraped data.
+- Database structure and its structure.
+- The data enriching source and what has been able to get from there.
+- Challenges we experienced and how we faced them.
+- A short demo of the visualisation.
+- Insights or conclusions.
+
 ## Installation
 You should install python with basic installations, such as DateTime, and all the prerequisites in the requirements.txt file.
 ```bash
