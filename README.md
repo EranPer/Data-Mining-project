@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ```
 
 ## How to use the code
-The program fetches the data at first and update it in any given time.
+The program fetches the data at first and updates it in any given time.
 After installation, upload the python file to your favorite Python editor and run the code. 
 Alternatively, you can run the code from the CLI (i.e. CMD in windows). The usage is as following:
 ```bash
